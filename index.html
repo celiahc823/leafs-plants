@@ -60,28 +60,29 @@
   ];
 
   async function cargarModelo() {
-    modelo = await tf.loadLayersModel('model.json');
-    resultado.innerText = "Modelo cargado. Iniciando cámara...";
-    mostrarCamara();
+    try {
+      modelo = await tf.loadLayersModel('model.json');
+      resultado.innerText = "✅ Modelo cargado. Iniciando cámara...";
+      mostrarCamara();
+    } catch (e) {
+      resultado.innerText = "❌ Error al cargar el modelo.";
+      console.error(e);
+    }
   }
 
   async function mostrarCamara() {
     try {
       const constraints = {
-        video: {
-          width: TAMANO,
-          height: TAMANO,
-          facingMode: facingMode
-        }
+        video: { width: TAMANO, height: TAMANO, facingMode: facingMode }
       };
       if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
       }
       currentStream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = currentStream;
-      setTimeout(() => predecir(), 1000);
+      setTimeout(() => predecir(), 1500);
     } catch (error) {
-      resultado.innerText = "No se pudo acceder a la cámara.";
+      resultado.innerText = "❌ No se pudo acceder a la cámara.";
       console.error(error);
     }
   }
@@ -95,18 +96,26 @@
     if (!modelo) return;
 
     ctx.drawImage(video, 0, 0, TAMANO, TAMANO);
-    let imgData = tf.browser.fromPixels(canvas).toFloat().div(255.0).expandDims();
+    const imgTensor = tf.browser.fromPixels(canvas)
+                        .resizeBilinear([TAMANO, TAMANO])
+                        .toFloat()
+                        .div(255.0)
+                        .expandDims();
 
-    let prediccion = modelo.predict(imgData);
-    let index = prediccion.argMax(-1).dataSync()[0];
-    let clase = classNames[index] || "Clase desconocida";
+    const prediccion = modelo.predict(imgTensor);
+    const predicciones = await prediccion.data();
+    const maxProb = Math.max(...predicciones);
+    const claseIndex = predicciones.indexOf(maxProb);
+    const clase = classNames[claseIndex] || "Clase desconocida";
 
-    resultado.innerText = `🌿 Resultado: ${clase}`;
+    resultado.innerText = `🌿 ${clase} (${(maxProb * 100).toFixed(1)}%)`;
+
+    tf.dispose([imgTensor, prediccion]);  // liberar memoria
     requestAnimationFrame(predecir);
   }
 
   window.onload = cargarModelo;
 </script>
+
 </body>
 </html>
-
