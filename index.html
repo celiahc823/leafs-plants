@@ -61,12 +61,13 @@
 
   async function cargarModelo() {
     try {
-      modelo = await tf.loadLayersGraph('model.json');
+      modelo = await tf.loadLayersModel('model.json');
+      console.log("✅ Modelo cargado correctamente");
       resultado.innerText = "Modelo cargado. Iniciando cámara...";
       mostrarCamara();
     } catch (error) {
       resultado.innerText = "❌ No se pudo cargar el modelo";
-      console.error(error);
+      console.error("❌ Error al cargar el modelo:", error);
     }
   }
 
@@ -87,7 +88,7 @@
       setTimeout(() => predecir(), 1000);
     } catch (error) {
       resultado.innerText = "❌ No se pudo acceder a la cámara";
-      console.error(error);
+      console.error("❌ Error al mostrar cámara:", error);
     }
   }
 
@@ -96,46 +97,45 @@
     mostrarCamara();
   }
 
-async function predecir() {
-  if (!modelo) {
-    console.error("Modelo no cargado");
-    return;
-  }
-
-  ctx.drawImage(video, 0, 0, TAMANO, TAMANO);
-  const imgTensor = tf.browser.fromPixels(canvas)
-                        .resizeBilinear([TAMANO, TAMANO])
-                        .toFloat()
-                        .div(255.0)
-                        .expandDims();
-
-  try {
-    const prediccion = modelo.predict(imgTensor);
-    const predicciones = await prediccion.data();
-
-    tf.dispose([imgTensor, prediccion]);
-
-    console.log("Predicciones:", predicciones); // 👈 clave
-
-    if (!predicciones || predicciones.length === 0) {
-      resultado.innerText = "❓ Clase desconocida";
-    } else {
-      const maxProb = Math.max(...predicciones);
-      const claseIndex = predicciones.indexOf(maxProb);
-      const clase = classNames[claseIndex] || "Clase desconocida";
-      resultado.innerText = `🌿 ${clase} (${(maxProb * 100).toFixed(1)}%)`;
+  async function predecir() {
+    if (!modelo) {
+      console.error("⚠️ Modelo no cargado");
+      return;
     }
-  } catch (err) {
-    resultado.innerText = "⚠️ Error al clasificar";
-    console.error("Error en predicción:", err);
+
+    ctx.drawImage(video, 0, 0, TAMANO, TAMANO);
+    const imgTensor = tf.browser.fromPixels(canvas)
+                          .resizeBilinear([TAMANO, TAMANO])
+                          .toFloat()
+                          .div(255.0)
+                          .expandDims();
+
+    try {
+      const prediccion = modelo.predict(imgTensor);
+      const predicciones = await prediccion.data();
+
+      tf.dispose([imgTensor, prediccion]);
+
+      console.log("📊 Predicciones:", predicciones);
+
+      if (!predicciones || predicciones.length === 0) {
+        resultado.innerText = "❓ Clase desconocida";
+      } else {
+        const maxProb = Math.max(...predicciones);
+        const claseIndex = predicciones.indexOf(maxProb);
+        const clase = classNames[claseIndex] || "Clase desconocida";
+        resultado.innerText = `🌿 ${clase} (${(maxProb * 100).toFixed(1)}%)`;
+      }
+    } catch (err) {
+      resultado.innerText = "⚠️ Error al clasificar";
+      console.error("❌ Error en predicción:", err);
+    }
+
+    requestAnimationFrame(predecir);
   }
-
-  requestAnimationFrame(predecir);
-}
-
-
 
   window.onload = cargarModelo;
 </script>
+
 </body>
 </html>
