@@ -21,7 +21,7 @@
     <img class="d-block mx-auto mb-2" src="MCD.png" alt="Logo" width="80" height="80">
     <h1 class="display-5 fw-bold">leafs-plants</h1>
     <div class="col-lg-6 mx-auto">
-      <p class="lead mb-0">Clasificaci&oacute;n de hojas de plantas con la c&aacute;mara usando TensorFlow.js</p>
+      <p class="lead mb-0">Clasificación de hojas de plantas con la cámara usando TensorFlow.js</p>
     </div>
   </div>
 
@@ -61,7 +61,7 @@
 
   async function cargarModelo() {
     try {
-      modelo = await tf.loadLayersModel('model.json');
+      modelo = await tf.loadGraphModel('tfjs_model/model.json');
       console.log("✅ Modelo cargado correctamente");
       resultado.innerText = "Modelo cargado. Iniciando cámara...";
       mostrarCamara();
@@ -111,7 +111,7 @@
                           .expandDims();
 
     try {
-      const prediccion = modelo.predict(imgTensor);
+      const prediccion = modelo.execute(imgTensor);
       const predicciones = await prediccion.data();
 
       tf.dispose([imgTensor, prediccion]);
@@ -139,3 +139,4 @@
 
 </body>
 </html>
+
