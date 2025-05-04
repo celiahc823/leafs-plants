@@ -1,0 +1,32 @@
+
+# Archivos de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos temporales de Jupyter y Colab
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Entornos virtuales
+.env/
+.venv/
+env/
+ENV/
+venv/
+*.env
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Resultados, logs y archivos grandes
+*.log
+*.h5
+*.csv
+*.npy
+*.ckpt
+
+# Archivos de configuración de VSCode (si usas)
+.vscode/
