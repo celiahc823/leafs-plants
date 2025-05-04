@@ -18,7 +18,7 @@
 
 <main>
   <div class="px-4 py-2 my-2 text-center border-bottom">
-    <img class="d-block mx-auto mb-2" src="MCD.png" alt="" width="80" height="80">
+    <img class="d-block mx-auto mb-2" src="MCD.png" alt="Logo" width="80" height="80">
     <h1 class="display-5 fw-bold">leafs-plants</h1>
     <div class="col-lg-6 mx-auto">
       <p class="lead mb-0">Clasificaci&oacute;n de hojas de plantas con la c&aacute;mara usando TensorFlow.js</p>
@@ -62,27 +62,31 @@
   async function cargarModelo() {
     try {
       modelo = await tf.loadLayersModel('model.json');
-      resultado.innerText = "✅ Modelo cargado. Iniciando cámara...";
+      resultado.innerText = "Modelo cargado. Iniciando cámara...";
       mostrarCamara();
-    } catch (e) {
-      resultado.innerText = "❌ Error al cargar el modelo.";
-      console.error(e);
+    } catch (error) {
+      resultado.innerText = "❌ No se pudo cargar el modelo";
+      console.error(error);
     }
   }
 
   async function mostrarCamara() {
     try {
       const constraints = {
-        video: { width: TAMANO, height: TAMANO, facingMode: facingMode }
+        video: {
+          width: TAMANO,
+          height: TAMANO,
+          facingMode: facingMode
+        }
       };
       if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
       }
       currentStream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = currentStream;
-      setTimeout(() => predecir(), 1500);
+      setTimeout(() => predecir(), 1000);
     } catch (error) {
-      resultado.innerText = "❌ No se pudo acceder a la cámara.";
+      resultado.innerText = "❌ No se pudo acceder a la cámara";
       console.error(error);
     }
   }
@@ -102,20 +106,29 @@
                         .div(255.0)
                         .expandDims();
 
-    const prediccion = modelo.predict(imgTensor);
-    const predicciones = await prediccion.data();
-    const maxProb = Math.max(...predicciones);
-    const claseIndex = predicciones.indexOf(maxProb);
-    const clase = classNames[claseIndex] || "Clase desconocida";
+    try {
+      const prediccion = modelo.predict(imgTensor);
+      const predicciones = await prediccion.data();
+      tf.dispose([imgTensor, prediccion]);
 
-    resultado.innerText = `🌿 ${clase} (${(maxProb * 100).toFixed(1)}%)`;
+      if (!predicciones || predicciones.length === 0) {
+        resultado.innerText = "❓ Clase desconocida";
+      } else {
+        const maxProb = Math.max(...predicciones);
+        const claseIndex = predicciones.indexOf(maxProb);
+        const clase = classNames[claseIndex] || "Clase desconocida";
 
-    tf.dispose([imgTensor, prediccion]);  // liberar memoria
+        resultado.innerText = `🌿 ${clase} (${(maxProb * 100).toFixed(1)}%)`;
+      }
+    } catch (err) {
+      resultado.innerText = "⚠️ Error al clasificar";
+      console.error(err);
+    }
+
     requestAnimationFrame(predecir);
   }
 
   window.onload = cargarModelo;
 </script>
-
 </body>
 </html>
