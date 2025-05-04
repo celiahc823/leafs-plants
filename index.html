@@ -61,7 +61,7 @@
 
   async function cargarModelo() {
     try {
-      modelo = await tf.loadLayersModel('model.json');
+      modelo = await tf.loadLayersGraph('model.json');
       resultado.innerText = "Modelo cargado. Iniciando cámara...";
       mostrarCamara();
     } catch (error) {
