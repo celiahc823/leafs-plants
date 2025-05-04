@@ -96,37 +96,40 @@
     mostrarCamara();
   }
 
-  async function predecir() {
-    if (!modelo) return;
+async function predecir() {
+  if (!modelo) return;
 
-    ctx.drawImage(video, 0, 0, TAMANO, TAMANO);
-    const imgTensor = tf.browser.fromPixels(canvas)
-                        .resizeBilinear([TAMANO, TAMANO])
-                        .toFloat()
-                        .div(255.0)
-                        .expandDims();
+  ctx.drawImage(video, 0, 0, TAMANO, TAMANO);
+  const imgTensor = tf.browser.fromPixels(canvas)
+                      .resizeBilinear([TAMANO, TAMANO])
+                      .toFloat()
+                      .div(255.0)
+                      .expandDims();
 
-    try {
-      const prediccion = modelo.predict(imgTensor);
-      const predicciones = await prediccion.data();
-      tf.dispose([imgTensor, prediccion]);
+  try {
+    const prediccion = modelo.predict(imgTensor);
+    const predicciones = await prediccion.data();
+    tf.dispose([imgTensor, prediccion]);
 
-      if (!predicciones || predicciones.length === 0) {
-        resultado.innerText = "❓ Clase desconocida";
-      } else {
-        const maxProb = Math.max(...predicciones);
-        const claseIndex = predicciones.indexOf(maxProb);
-        const clase = classNames[claseIndex] || "Clase desconocida";
+    console.log("Predicciones:", predicciones); // 👈 Esto te ayudará
 
-        resultado.innerText = `🌿 ${clase} (${(maxProb * 100).toFixed(1)}%)`;
-      }
-    } catch (err) {
-      resultado.innerText = "⚠️ Error al clasificar";
-      console.error(err);
+    if (!predicciones || predicciones.length === 0) {
+      resultado.innerText = "❓ Clase desconocida";
+    } else {
+      const maxProb = Math.max(...predicciones);
+      const claseIndex = predicciones.indexOf(maxProb);
+      const clase = classNames[claseIndex] || "Clase desconocida";
+
+      resultado.innerText = `🌿 ${clase} (${(maxProb * 100).toFixed(1)}%)`;
     }
-
-    requestAnimationFrame(predecir);
+  } catch (err) {
+    resultado.innerText = "⚠️ Error al clasificar";
+    console.error("Error en predicción:", err);
   }
+
+  requestAnimationFrame(predecir);
+}
+
 
   window.onload = cargarModelo;
 </script>
