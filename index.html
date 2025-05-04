@@ -97,21 +97,25 @@
   }
 
 async function predecir() {
-  if (!modelo) return;
+  if (!modelo) {
+    console.error("Modelo no cargado");
+    return;
+  }
 
   ctx.drawImage(video, 0, 0, TAMANO, TAMANO);
   const imgTensor = tf.browser.fromPixels(canvas)
-                      .resizeBilinear([TAMANO, TAMANO])
-                      .toFloat()
-                      .div(255.0)
-                      .expandDims();
+                        .resizeBilinear([TAMANO, TAMANO])
+                        .toFloat()
+                        .div(255.0)
+                        .expandDims();
 
   try {
     const prediccion = modelo.predict(imgTensor);
     const predicciones = await prediccion.data();
+
     tf.dispose([imgTensor, prediccion]);
 
-    console.log("Predicciones:", predicciones); // 👈 Esto te ayudará
+    console.log("Predicciones:", predicciones); // 👈 clave
 
     if (!predicciones || predicciones.length === 0) {
       resultado.innerText = "❓ Clase desconocida";
@@ -119,7 +123,6 @@ async function predecir() {
       const maxProb = Math.max(...predicciones);
       const claseIndex = predicciones.indexOf(maxProb);
       const clase = classNames[claseIndex] || "Clase desconocida";
-
       resultado.innerText = `🌿 ${clase} (${(maxProb * 100).toFixed(1)}%)`;
     }
   } catch (err) {
@@ -129,6 +132,7 @@ async function predecir() {
 
   requestAnimationFrame(predecir);
 }
+
 
 
   window.onload = cargarModelo;
